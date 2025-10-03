@@ -1,28 +1,57 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Audio Play</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Audio — Play Full</title>
+  <style>
+    body{display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#111;color:#fff;font-family:system-ui,Segoe UI,Roboto}
+    button{padding:14px 22px;font-size:18px;border-radius:10px;border:0;background:#1db954;color:#fff;cursor:pointer}
+  </style>
 </head>
-<body style="display:flex;justify-content:center;align-items:center;height:100vh;background:black;color:white;font-family:sans-serif;">
+<body>
+  <button id="playBtn">🔊 Aktifkan Suara</button>
 
-  <button onclick="playAudio()" style="padding:15px 30px;font-size:18px;border:none;border-radius:10px;background:#1db954;color:white;cursor:pointer;">
-    🔊 Aktifkan dj Terenak 2025 karnaval
-  </button>
-
-  <audio id="bgAudio" loop>
+  <audio id="bgAudio" loop preload="auto" playsinline>
+    <!-- Ganti URL di bawah ke link mp3 GitHub Pages/Vercel kamu -->
     <source src="https://danssgacor23-lang.github.io/ahaudio/prank.mp3" type="audio/mpeg">
     Browser kamu tidak mendukung audio.
   </audio>
 
   <script>
-    function playAudio() {
-      const audio = document.getElementById("bgAudio");
-      audio.volume = 1.0; // set maksimal (full volume)
-      audio.play()
-        .then(() => console.log("Audio diputar"))
-        .catch(err => console.error("Gagal memutar:", err));
+    const btn = document.getElementById('playBtn');
+    const audio = document.getElementById('bgAudio');
+
+    async function playAudio() {
+      try {
+        // Beberapa browser mobile perlu AudioContext resume agar audio bisa terdengar
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          window._ctx = window._ctx || new AudioContext();
+          if (window._ctx.state === 'suspended') {
+            await window._ctx.resume().catch(()=>{});
+          }
+          // Coba sambungkan sekali saja (mencegah error jika sudah tersambung)
+          try {
+            if (!window._srcNode) {
+              window._srcNode = window._ctx.createMediaElementSource(audio);
+              window._srcNode.connect(window._ctx.destination);
+            }
+          } catch(e){}
+        }
+
+        // Pastikan player internal diset ke full sebelum play
+        audio.volume = 1.0;
+        audio.currentTime = 0; // mulai dari awal (opsional)
+        await audio.play(); // play() karena tombol adalah user gesture, harusnya succeed
+        btn.style.display = 'none'; // sembunyikan tombol setelah play
+      } catch (err) {
+        console.error('Gagal memutar audio:', err);
+        alert('Gagal memutar audio. Coba klik lagi atau cek link MP3 kamu.');
+      }
     }
+
+    btn.addEventListener('click', playAudio);
   </script>
 </body>
 </html>
